@@ -26,15 +26,11 @@
       OpenBSD: "su -s /bin/ksh molecule -c 'doas /bin/ls /root'"
 
   tasks:
-    - name: 'stat the sudoers file'
+    - name: 'Check the sudoers file exists'
       stat:
         path: "{{ __verify_suoders_by_os_family[ ansible_facts['os_family'] ] }}"
       register: __verify_file
-
-    - name: 'Check the sudoers file exists'
-      assert:
-        that:
-          - __verify_file.stat.exists
+      failed_when: not __verify_file.stat.exists
 
     - name: 'Verify privesc case1'
       shell: "{{ __verify_ansible_sudo_by_os_family_cmd1[ ansible_facts['os_family'] ] }}"

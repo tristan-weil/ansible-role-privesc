@@ -1,4 +1,4 @@
-# Ansible Role: OpenBSD_doas
+# Ansible Role: privesc
 
 An Ansible Role to configure the *sudo* and *doas* (OpenBSD) commands.
 
@@ -89,6 +89,10 @@ Optional variables:
                         arguments:
                           - '/root'
                       - command: '/usr/bin/whoami'
+
+## Todo
+
+None.
 
 ## Dependencies
 

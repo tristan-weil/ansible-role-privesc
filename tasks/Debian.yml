@@ -1,0 +1,24 @@
+---
+
+- include_role:
+    name: 'ansible-role-pkg'
+  vars:
+    pkg_list: "{{ _privesc_pkgs }}"
+
+- name: 'remove the sudoers.d files'
+  file:
+    path: "/etc/sudoers.d/{{ item.name }}"
+    state: 'absent'
+  when: item.state | default('present') == 'absent'
+  loop: "{{ privesc_configs_list }}"
+
+- name: 'create the sudoers.d files'
+  template:
+    src: 'etc/sudoers.d/sudoers.j2'
+    dest: "/etc/sudoers.d/{{ item.name }}"
+    owner: 'root'
+    group: 'root'
+    mode: '0400'
+    validate: 'visudo -cf %s'
+  when: item.state | default('present') == 'present'
+  loop: "{{ privesc_configs_list }}"

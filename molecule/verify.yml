@@ -1,0 +1,87 @@
+---
+
+- hosts: all
+  name: 'Verify'
+  become: True
+  gather_facts: True
+
+  tasks:
+    - block:
+        - name: 'Get the stat of the doas.conf'
+          stat:
+            path: '/etc/doas.conf'
+          register: __verify_file
+
+        - name: 'Check the doas.conf exists'
+          assert:
+            that:
+              - __verify_file.stat.exists
+
+        - name: 'Exec cmd1'
+          shell: |
+            su -s /bin/ksh testinfra -c 'doas /usr/bin/whoami'
+          register: _verify_cmd1
+
+        - name: 'Exec cmd2'
+          shell: |
+            su -s /bin/ksh testinfra -c 'doas /bin/ls /root'
+          register: _verify_cmd2
+
+        - name: 'Exec cmd3'
+          shell: |
+            su -s /bin/ksh molecule -c 'doas /usr/bin/whoami'
+          register: _verify_cmd3
+
+        - name: 'Exec cmd4'
+          shell: |
+            su -s /bin/ksh molecule -c 'doas /bin/ls /root'
+          register: _verify_cmd4
+
+        - name: 'Check commands'
+          assert:
+            that:
+              - _verify_cmd1.stdout == 'root'
+              - _verify_cmd2.rc == 0
+              - _verify_cmd3.stdout == 'root'
+              - _verify_cmd4.rc == 0
+      when: ansible_facts['os_family'] == 'OpenBSD'
+
+    - block:
+        - name: 'Get the stat of the sudoers file'
+          stat:
+            path: '/etc/sudoers.d/testinfra'
+          register: __verify_file
+
+        - name: 'Check the sudoers file exists'
+          assert:
+            that:
+              - __verify_file.stat.exists
+
+        - name: 'Exec cmd1'
+          shell: |
+            su -s /bin/bash testinfra -c 'sudo /usr/bin/whoami'
+          register: _verify_cmd1
+
+        - name: 'Exec cmd2'
+          shell: |
+            su -s /bin/bash testinfra -c 'sudo /bin/ls /root'
+          register: _verify_cmd2
+
+        - name: 'Exec cmd3'
+          shell: |
+            su -s /bin/bash molecule -c 'sudo /usr/bin/whoami'
+          register: _verify_cmd3
+
+        - name: 'Exec cmd4'
+          shell: |
+            su -s /bin/bash molecule -c 'sudo /bin/ls /root'
+          register: _verify_cmd4
+
+        - name: 'Check commands'
+          assert:
+            that:
+              - _verify_cmd1.stdout == 'root'
+              - _verify_cmd2.rc == 0
+              - _verify_cmd3.stdout == 'root'
+              - _verify_cmd4.rc == 0
+      when: ansible_facts['os_family'] == 'Debian'

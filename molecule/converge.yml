@@ -1,0 +1,35 @@
+---
+
+- hosts: all
+  name: 'Converge'
+  become: True
+
+  tasks:
+    - name: 'create user'
+      user:
+        name: 'testinfra'
+
+    - name: 'create user'
+      user:
+        name: 'molecule'
+
+    - import_role:
+        name: 'ansible-role-privesc'
+      vars:
+        privesc_configs_list:
+          - name: 'molecule'
+            state: 'present'
+            rules:
+              - from: 'molecule'
+                nopasswd: True
+
+          - name: 'testinfra'
+            state: 'present'
+            rules:
+              - from: 'testinfra'
+                nopasswd: True
+                commands:
+                  - command: '/bin/ls'
+                    arguments:
+                      - '/root'
+                  - command: '/usr/bin/whoami'

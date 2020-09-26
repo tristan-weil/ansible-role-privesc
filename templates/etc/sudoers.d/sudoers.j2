@@ -1,0 +1,16 @@
+{% for rule in item.rules %}
+{%      if rule.commands | default([]) | length == 0 %}
+{{ rule.from }} \
+    ALL=({{ rule.to | default('ALL') }}) \
+    {% if rule.nopasswd | default(False) | bool %}NOPASSWD:{% endif %} \
+    ALL
+{%      else %}
+{%          for cmd in rule.commands %}
+{{ rule.from }} \
+    ALL=({{ rule.to | default('ALL') }}) \
+    {% if rule.nopasswd | default(False) | bool %}NOPASSWD:{% endif %} \
+    {{ cmd.command }} {{ cmd.arguments | default([]) | join(' ') }}
+
+{%          endfor %}
+{%      endif %}
+{% endfor %}

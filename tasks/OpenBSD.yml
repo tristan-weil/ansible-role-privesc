@@ -1,0 +1,49 @@
+---
+
+- name: 'update the configuration'
+  blockinfile:
+    dest: '/etc/doas.conf'
+    create: True
+    owner: 'root'
+    group: 'wheel'
+    mode: '0400'
+    block: |
+      {% for rule in item.rules %}
+      {%    if rule.commands | default([]) | length == 0 -%}
+      {%        set line = [] -%}
+      {%        set dummy = line.append('permit') -%}
+      {%        if rule.nopasswd | default(False) | bool %}
+      {%          set dummy = line.append('nopass') -%}
+      {%        endif %}
+      {%        set dummy = line.append(rule.from) -%}
+      {%        if rule.to is defined %}
+      {%          set dummy = line.append('as') -%}
+      {%          set dummy = line.append(rule.to) -%}
+      {%        endif -%}
+      {{ line | join(' ') }}
+      {%    else -%}
+      {%      for cmd in rule.commands %}
+      {%        set line = [] -%}
+      {%        set dummy = line.append('permit') -%}
+      {%        if rule.nopasswd | default(False) | bool %}
+      {%          set dummy = line.append('nopass') -%}
+      {%        endif %}
+      {%        set dummy = line.append(rule.from) -%}
+      {%        if rule.to is defined %}
+      {%          set dummy = line.append('as') -%}
+      {%          set dummy = line.append(rule.to) -%}
+      {%        endif -%}
+      {%        set dummy = line.append('cmd') -%}
+      {%        set dummy = line.append(cmd.command) -%}
+      {%        if cmd.arguments | default([]) | length > 0 %}
+      {%          set dummy = line.append('args') -%}
+      {%          set dummy = line.append(cmd.arguments | join(' ')) -%}
+      {%        endif -%}
+      {{ line | join(' ') }}
+      {%      endfor %}
+      {%    endif -%}
+      {% endfor %}
+    marker: "# {mark} {{ item.name }}"
+    state: "{{ item.state | default('present') }}"
+    validate: 'doas -C %s'
+  loop: "{{ privesc_configs_list }}"
